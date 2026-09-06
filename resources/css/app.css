@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+/*
+ |--------------------------------------------------------------------------
+ | ExpenseKeeper theme
+ |--------------------------------------------------------------------------
+ | Dark mode is class-based. The initial class is applied in app.blade.php
+ | before React loads, so the first paint follows the user's OS theme when
+ | no manual preference has been saved yet.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+    font-family: 'IRANYekan';
+    src: url('../fonts/iranyekan.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'IRANYekan';
+    src: url('../fonts/iranyekanbold.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    --font-sans: 'IRANYekan', Tahoma, Arial, sans-serif;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        direction: rtl;
+        margin: 0;
+        font-family: 'IRANYekan', Tahoma, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+        font: inherit;
+    }
+
+    button,
+    a {
+        -webkit-tap-highlight-color: transparent;
+    }
+}

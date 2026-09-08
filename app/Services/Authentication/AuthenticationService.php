@@ -37,9 +37,14 @@ class AuthenticationService
     public function signIn(Request $request, string $username, string $password): ?User
     {
         $credential = UserAuth::query()->with('user')->where('username', $username)->first();
+
+        if (! $credential) {
+            return null;
+        }
+
         $user = $credential->user;
 
-        if (! $credential || ! $user || ! Hash::check($password, $credential->password)) {
+        if (! $user || ! Hash::check($password, $credential->password)) {
             return null;
         }
 

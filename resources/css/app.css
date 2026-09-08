@@ -1,13 +1,5 @@
 @import 'tailwindcss';
 
-/*
- |--------------------------------------------------------------------------
- | ExpenseKeeper theme
- |--------------------------------------------------------------------------
- | Dark mode is class-based. The initial class is applied in app.blade.php
- | before React loads, so the first paint follows the user's OS theme when
- | no manual preference has been saved yet.
- */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @font-face {
@@ -54,4 +46,86 @@
     a {
         -webkit-tap-highlight-color: transparent;
     }
+}
+
+@keyframes fadeIn {
+
+    from{
+        opacity:0;
+    }
+
+    to{
+        opacity:1;
+    }
+
+}
+
+@keyframes slideUp {
+    from{
+        opacity:0;
+        transform:translateY(30px) scale(.95);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+}
+
+.animate-fadeIn{
+    animation:fadeIn .2s ease-out;
+}
+
+.animate-slideUp{
+    animation:slideUp .25s ease-out;
+}
+
+
+@keyframes modalBackdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalBackdropOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes modalPanelIn {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modalPanelOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(16px) scale(.98);
+    }
+}
+
+.animate-modalBackdropIn {
+    animation: modalBackdropIn .2s ease-out both;
+}
+
+.animate-modalBackdropOut {
+    animation: modalBackdropOut .2s ease-in both;
+}
+
+.animate-modalPanelIn {
+    animation: modalPanelIn .25s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.animate-modalPanelOut {
+    animation: modalPanelOut .2s ease-in both;
 }

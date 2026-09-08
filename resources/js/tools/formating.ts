@@ -16,6 +16,26 @@ export function persianDigit(number: string): string {
     return number.replace(/\d/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
 }
 
+export function englishDigit(value: string): string {
+    return value
+        .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)))
+        .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+}
+
+export function digitsOnly(value: string): string {
+    return englishDigit(value).replace(/\D/g, '');
+}
+
+export function formatAmountInput(value: string): string {
+    const digits = digitsOnly(value);
+
+    if (!digits) {
+        return '';
+    }
+
+    return Number(digits).toLocaleString('en-US');
+}
+
 export function persianMoney(number: number): string {
     if (!number) {
         return '';

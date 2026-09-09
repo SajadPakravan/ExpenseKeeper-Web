@@ -1,12 +1,9 @@
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3 } from 'lucide-react';
+import FloatingPopover from '@/components/floating-popover';
+import TimePicker from '@/components/time-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { englishDigit, persianDigit } from '@/tools/formating';
-import {
-    isValidJalaliDate,
-    jalaliMonthLength,
-    toGregorian,
-    toJalali,
-} from '@/tools/jalali';
+import { isValidJalaliDate, jalaliMonthLength, toGregorian, toJalali } from '@/tools/jalali';
 import { PERSIAN_DAYS, PERSIAN_MONTHS, TIMEZONE } from '@/tools/values';
 
 type SelectedJalaliDate = {
@@ -36,11 +33,7 @@ function dateToDisplay(value: string): string {
         return '';
     }
 
-    const jalali = toJalali(
-        date.getFullYear(),
-        date.getMonth() + 1,
-        date.getDate(),
-    );
+    const jalali = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
     return formatDisplay(
         {
@@ -57,9 +50,7 @@ function parseDisplay(value: string): {
     time: string;
 } | null {
     const normalized = englishDigit(value.trim());
-    const match = normalized.match(
-        /^(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})$/,
-    );
+    const match = normalized.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{2})$/);
 
     if (!match) {
         return null;
@@ -71,13 +62,7 @@ function parseDisplay(value: string): {
     const hour = Number(match[4]);
     const minute = Number(match[5]);
 
-    if (
-        !isValidJalaliDate(year, month, day) ||
-        hour < 0 ||
-        hour > 23 ||
-        minute < 0 ||
-        minute > 59
-    ) {
+    if (!isValidJalaliDate(year, month, day) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
         return null;
     }
 
@@ -91,44 +76,23 @@ function toUtcIso(date: SelectedJalaliDate, time: string): string {
     const [hour, minute] = time.split(':').map(Number);
     const gregorian = toGregorian(date.year, date.month, date.day);
 
-    const localDate = new Date(
-        gregorian.gy,
-        gregorian.gm - 1,
-        gregorian.gd,
-        hour,
-        minute,
-        0,
-        0,
-    );
+    const localDate = new Date(gregorian.gy, gregorian.gm - 1, gregorian.gd, hour, minute, 0, 0);
 
     return localDate.toISOString();
 }
 
-export default function PersianDateTimePicker({
-    value,
-    onChange,
-}: {
-    value: string;
-    onChange: (value: string) => void;
-}) {
+export default function PersianDateTimePicker({ value, onChange }: { value: string; onChange: (value: string) => void }) {
     const now = new Date();
-    const todayJalali = toJalali(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        now.getDate(),
-    );
+    const todayJalali = toJalali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
     const [open, setOpen] = useState(false);
     const [display, setDisplay] = useState(() => dateToDisplay(value));
     const [calendarYear, setCalendarYear] = useState(todayJalali.jy);
     const [calendarMonth, setCalendarMonth] = useState(todayJalali.jm);
-    const [selectedDate, setSelectedDate] = useState<SelectedJalaliDate | null>(
-        null,
-    );
-    const [time, setTime] = useState(
-        `${pad(now.getHours())}:${pad(now.getMinutes())}`,
-    );
+    const [selectedDate, setSelectedDate] = useState<SelectedJalaliDate | null>(null);
+    const [time, setTime] = useState(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
     const rootRef = useRef<HTMLDivElement>(null);
+    const inputAnchorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!value) {
@@ -143,11 +107,7 @@ export default function PersianDateTimePicker({
             return;
         }
 
-        const jalali = toJalali(
-            date.getFullYear(),
-            date.getMonth() + 1,
-            date.getDate(),
-        );
+        const jalali = toJalali(date.getFullYear(), date.getMonth() + 1, date.getDate());
 
         const nextDate = {
             year: jalali.jy,
@@ -164,28 +124,12 @@ export default function PersianDateTimePicker({
         setDisplay(formatDisplay(nextDate, nextTime));
     }, [value]);
 
-    useEffect(() => {
-        function handleOutside(event: MouseEvent) {
-            if (!rootRef.current?.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        }
-
-        document.addEventListener('mousedown', handleOutside);
-
-        return () => document.removeEventListener('mousedown', handleOutside);
-    }, []);
-
     const monthLength = jalaliMonthLength(calendarYear, calendarMonth);
 
     const firstWeekday = useMemo(() => {
         const gregorian = toGregorian(calendarYear, calendarMonth, 1);
 
-        const jsDay = new Date(
-            gregorian.gy,
-            gregorian.gm - 1,
-            gregorian.gd,
-        ).getDay();
+        const jsDay = new Date(gregorian.gy, gregorian.gm - 1, gregorian.gd).getDay();
 
         // JavaScript: Sunday=0 ... Saturday=6
         // UI: Saturday=0 ... Friday=6
@@ -201,11 +145,7 @@ export default function PersianDateTimePicker({
 
     function selectCurrent() {
         const current = new Date();
-        const jalali = toJalali(
-            current.getFullYear(),
-            current.getMonth() + 1,
-            current.getDate(),
-        );
+        const jalali = toJalali(current.getFullYear(), current.getMonth() + 1, current.getDate());
         const nextDate = {
             year: jalali.jy,
             month: jalali.jm,
@@ -258,7 +198,7 @@ export default function PersianDateTimePicker({
     return (
         <div ref={rootRef} className="relative">
             <div className="flex flex-col gap-2 sm:flex-row">
-                <div className="relative flex-1">
+                <div ref={inputAnchorRef} className="relative flex-1">
                     <input
                         type="text"
                         value={display}
@@ -281,18 +221,22 @@ export default function PersianDateTimePicker({
                 <button
                     type="button"
                     onClick={selectCurrent}
-                    className="h-12 shrink-0 rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/15"
+                    className="h-12 shrink-0 cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50 px-4 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:hover:bg-emerald-400/15"
                 >
                     تاریخ و زمان فعلی
                 </button>
             </div>
 
-            <p className="mt-2 text-xs text-slate-400">
-                فرمت ورود دستی: ۱۴۰۵/۰۶/۱۷ ۱۸:۳۰ — زمان محلی: {TIMEZONE}
-            </p>
+            <p className="mt-2 text-xs text-slate-400">فرمت ورود دستی: ۱۴۰۵/۰۶/۱۷ ۱۸:۳۰ — زمان محلی: {TIMEZONE}</p>
 
-            {open && (
-                <div className="absolute z-50 mt-2 w-full min-w-[290px] rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl sm:w-[390px] dark:border-white/10 dark:bg-slate-900">
+            <FloatingPopover
+                open={open}
+                anchorRef={inputAnchorRef}
+                onClose={() => setOpen(false)}
+                popoverWidth={390}
+                maxHeight={520}
+                className="rounded-3xl p-4"
+            >
                     <div className="mb-4 flex items-center justify-between">
                         <button
                             type="button"
@@ -304,8 +248,7 @@ export default function PersianDateTimePicker({
                         </button>
 
                         <div className="text-sm font-bold text-slate-800 dark:text-white">
-                            {PERSIAN_MONTHS[calendarMonth - 1]}{' '}
-                            {persianDigit(String(calendarYear))}
+                            {PERSIAN_MONTHS[calendarMonth - 1]} {persianDigit(String(calendarYear))}
                         </div>
 
                         <button
@@ -320,30 +263,19 @@ export default function PersianDateTimePicker({
 
                     <div className="mb-2 grid grid-cols-7 gap-1">
                         {PERSIAN_DAYS.map((day) => (
-                            <div
-                                key={day}
-                                className="py-1 text-center text-[11px] font-bold text-slate-400"
-                            >
+                            <div key={day} className="py-1 text-center text-[11px] font-bold text-slate-400">
                                 {day.slice(0, 1)}
                             </div>
                         ))}
                     </div>
 
                     <div className="grid grid-cols-7 gap-1">
-                        {Array.from({ length: firstWeekday }).map(
-                            (_, index) => (
-                                <span key={`blank-${index}`} />
-                            ),
-                        )}
+                        {Array.from({ length: firstWeekday }).map((_, index) => (
+                            <span key={`blank-${index}`} />
+                        ))}
 
-                        {Array.from(
-                            { length: monthLength },
-                            (_, i) => i + 1,
-                        ).map((day) => {
-                            const selected =
-                                selectedDate?.year === calendarYear &&
-                                selectedDate?.month === calendarMonth &&
-                                selectedDate?.day === day;
+                        {Array.from({ length: monthLength }, (_, i) => i + 1).map((day) => {
+                            const selected = selectedDate?.year === calendarYear && selectedDate?.month === calendarMonth && selectedDate?.day === day;
 
                             return (
                                 <button
@@ -376,23 +308,18 @@ export default function PersianDateTimePicker({
                             <Clock3 size={15} className="text-emerald-500" />
                             ساعت و دقیقه
                         </label>
-                        <input
-                            type="time"
-                            step={60}
+                        <TimePicker
                             value={time}
-                            onChange={(event) => {
-                                const nextTime = event.target.value;
+                            onChange={(nextTime) => {
                                 setTime(nextTime);
 
                                 if (selectedDate && nextTime) {
                                     commit(selectedDate, nextTime);
                                 }
                             }}
-                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
                         />
                     </div>
-                </div>
-            )}
+            </FloatingPopover>
         </div>
     );
 }

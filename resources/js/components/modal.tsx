@@ -28,6 +28,7 @@ export default function Modal({
         if (open) {
             setMounted(true);
             setClosing(false);
+
             return;
         }
 

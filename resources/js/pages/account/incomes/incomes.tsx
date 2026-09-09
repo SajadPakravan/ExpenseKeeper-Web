@@ -35,7 +35,7 @@ export default function Incomes() {
                 onClose={() => setOpen(false)}
                 maxWidth="4xl"
             >
-                <CreateIncomeForm onCancel={() => setOpen(false)}/>
+                <CreateIncomeForm onCancel={() => setOpen(false)} onCreated={()=> console.log('CCCCCC')}/>
             </Modal>
         </AccountLayout>
     );

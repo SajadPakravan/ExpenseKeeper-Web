@@ -1,6 +1,7 @@
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import FloatingPopover from '@/components/floating-popover';
 import { persianDigit } from '@/tools/formating';
 
 function normalizeDigits(value: string): string {
@@ -19,29 +20,30 @@ export default function DayOfMonthField({
 }) {
     const [open, setOpen] = useState(false);
     const [text, setText] = useState(value ? String(value) : '');
-    const rootRef = useRef<HTMLDivElement>(null);
+    const anchorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setText(value ? String(value) : '');
     }, [value]);
 
-    useEffect(() => {
-        function handleOutside(event: MouseEvent) {
-            if (!rootRef.current?.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        }
+    const days = useMemo(() => Array.from({ length: 31 }, (_, index) => index + 1), []);
 
-        document.addEventListener('mousedown', handleOutside);
-        return () => document.removeEventListener('mousedown', handleOutside);
-    }, []);
+    function setDay(day: number) {
+        const normalizedDay = Math.min(31, Math.max(1, day));
 
-    const days = useMemo(() => Array.from({ length: 31 }, (_, i) => i + 1), []);
+        setText(String(normalizedDay));
+        onChange(normalizedDay);
+    }
+
+    function changeDay(amount: -1 | 1) {
+        const current = value ?? 1;
+        setDay(current + amount);
+    }
 
     function handleInput(raw: string) {
         const normalized = normalizeDigits(raw).slice(0, 2);
+
         setText(normalized);
-        setOpen(true);
 
         if (!normalized) {
             onChange(null);
@@ -53,52 +55,72 @@ export default function DayOfMonthField({
     }
 
     return (
-        <div ref={rootRef} className="relative">
-            <div className="relative">
+        <div className="w-fit">
+            <div
+                ref={anchorRef}
+                className="flex h-11 w-[7.25rem] items-stretch overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 dark:border-white/10 dark:bg-white/[0.04]"
+            >
+                <button
+                    type="button"
+                    onClick={() => changeDay(-1)}
+                    disabled={(value ?? 1) <= 1}
+                    className="flex w-8 items-center justify-center border-l border-slate-200 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10 dark:hover:text-white"
+                    aria-label="کاهش روز"
+                >
+                    <ChevronDown size={16} />
+                </button>
+
                 <input
                     type="text"
                     inputMode="numeric"
-                    value={text}
+                    value={persianDigit(text)}
                     onFocus={() => setOpen(true)}
+                    onClick={() => setOpen(true)}
                     onChange={(event) => handleInput(event.target.value)}
-                    placeholder="مثلاً 21"
                     dir="ltr"
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pl-11 text-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
+                    aria-label="روز ماه"
+                    className="min-w-0 flex-1 bg-transparent px-1 text-center text-sm font-bold tabular-nums text-slate-800 outline-none dark:text-white"
                 />
+
                 <button
                     type="button"
-                    onClick={() => setOpen((current) => !current)}
-                    className="absolute left-2 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10"
-                    aria-label="نمایش روزهای ماه"
+                    onClick={() => changeDay(1)}
+                    disabled={(value ?? 31) >= 31}
+                    className="flex w-8 items-center justify-center border-r border-slate-200 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10 dark:hover:text-white"
+                    aria-label="افزایش روز"
                 >
-                    <ChevronDown size={17} />
+                    <ChevronUp size={16} />
                 </button>
             </div>
 
-            {open && (
-                <div className="absolute z-40 mt-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-white/10 dark:bg-slate-900">
-                    <div className="grid grid-cols-4 gap-1 sm:grid-cols-5">
-                        {days.map((day) => (
-                            <button
-                                key={day}
-                                type="button"
-                                onClick={() => {
-                                    onChange(day);
-                                    setText(String(day));
-                                    setOpen(false);
-                                }}
-                                className={`rounded-lg px-2 py-2 text-sm transition ${
-                                    value === day
-                                        ? 'bg-emerald-500 font-bold text-white dark:bg-emerald-400 dark:text-slate-950'
-                                        : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-300'
-                                }`}
-                            >
-                                {persianDigit(String(day))}
-                            </button>
-                        ))}
-                    </div>
+            <FloatingPopover
+                open={open}
+                anchorRef={anchorRef}
+                onClose={() => setOpen(false)}
+                popoverWidth={286}
+                maxHeight={250}
+                className="p-2"
+            >
+                <div className="grid grid-cols-7 gap-1">
+                    {days.map((day) => (
+                        <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                                setDay(day);
+                                setOpen(false);
+                            }}
+                            className={`flex aspect-square items-center justify-center rounded-lg text-xs font-bold tabular-nums transition ${
+                                value === day
+                                    ? 'bg-emerald-500 text-white dark:bg-emerald-400 dark:text-slate-950'
+                                    : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-300'
+                            }`}
+                        >
+                            {persianDigit(String(day))}
+                        </button>
+                    ))}
                 </div>
-            )}
+            </FloatingPopover>
         </div>
     );
 }
